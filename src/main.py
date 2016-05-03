@@ -10,6 +10,8 @@ from pydub import AudioSegment
 import scipy.io.wavfile as wavfile
 from scipy.fftpack import fft
 
+# for sending requests
+from api_requests import post_colors
 
 class VisualizerCore:
 
@@ -31,7 +33,7 @@ class VisualizerCore:
     # process normalized audio by fft'ing, chunking, etc.
     self.process_audio()
     # computer color values for the fragmented audio segments
-    self.colorize_audio()
+    # self.colorize_audio()
 
   def normalize_audio(self):
     music = AudioSegment.from_mp3(self.original_music_file)
@@ -70,7 +72,7 @@ class VisualizerCore:
       
       j = i * fragment_size
       # get each individual sample for the fragment
-      while ((j < (i + 1) * fragment_size) and j < a_length):
+      while (j < (i + 1) * fragment_size and j < a_length ):
         # normalize sample on [-1, 1)
         normalized_sample = (a[j] / 256)*2-1
         # add to current_fragment array
@@ -81,16 +83,67 @@ class VisualizerCore:
       # process current fragment through the FFT.
       processed_fragment = fft(current_fragment)
       # TODO: PROCESS SOME MO for visualization.
-      fragments.append(processed_fragment)
+      self.colorize_audio(processed_fragment)
+      # fragments.append(processed_fragment)
 
       i += 1
 
-    # TODO: debug
-    print fragments
-    self.fragments = fragments
+    print 'finished'
+    # self.fragments = fragments
 
-  def colorize_audio(self):
-    pass
+  def colorize_audio(self, fragment):
+    # normalize the fragment by using the magnitude
+    normalized_fragment = map(VisualizerCore.mag, fragment)
+    
+    # The upper-bounds for each band, binned logarithmically 
+    boundaries = [20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240, 20480]
+    # The Value in each band, initially should all be zero
+    bin_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10]
+
+    band = 0 #The Index of the band being scanned
+    for i in range(len(fragment)): #For each data point in the fragment
+      if (i >= boundaries[band]): #Check if the band changed
+        band += 1
+      bin_values[band] += int(normalized_fragment[i]) #Add to the current band
+
+    bin_max = 0
+    bin_max_position = 0
+    b = 0
+    while ( b < len(bin_values) ):
+      if bin_values[b] > bin_max:
+        bin_max = bin_values[b]
+        bin_max_position = b
+      b += 1
+
+    b = 0
+    while ( b < len(bin_values) ):
+      bin_values[b] = int(255 * (bin_values[b] / bin_max))
+      b += 1
+
+    print 'bin values:'
+    print bin_values
+
+    VisualizerCore.build_and_send_color_object(bin_values)
+
+  @staticmethod
+  def build_and_send_color_object(color_bins):
+    color_object = {}
+    i = 0
+    for b in color_bins:
+      key_name = 'color_' + str(i)
+      color_object[key_name] = [b, 0, 0]
+      i += 1
+    print color_object
+    post_colors(color_object)
+
+  # mag()
+  # @description: calculates the magnitude of a given number
+  # @param: cnum - list of fragments
+  # @author: Michael Chadbourne
+  # @return: number
+  @staticmethod
+  def mag( cnum ):
+    return math.sqrt(cnum.real**2 + cnum.imag**2)
 
 
 
