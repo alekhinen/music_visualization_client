@@ -5,8 +5,10 @@ from os import chmod
 import os.path
 
 # for audio processing
+import math
 from pydub import AudioSegment
 import scipy.io.wavfile as wavfile
+from scipy.fftpack import fft
 
 
 class VisualizerCore:
@@ -16,7 +18,8 @@ class VisualizerCore:
 
   original_music_file = ''
   normalized_music_file = ''
-  sample_rate = 44100
+  
+  audio_fragment_size = 0.125
 
   def __init__(self, music_file):
     self.original_music_file = music_file
@@ -29,18 +32,57 @@ class VisualizerCore:
     music = AudioSegment.from_mp3(self.original_music_file)
     self.createTmpDirectories()
     self.normalized_music_file = './tmp/sleep_deprivation'
-    music.export(self.normalized_music_file, format='wav')
+    # TODO: need to ensure this is being normalized to a mono channel (update: it ain't).
+    music.export(self.normalized_music_file, format='wav', parameters=['ac', '1'])
 
   def process_audio(self):
     # read the file
-    samplingRate, data = wavfile.read( self.normalized_music_file )
+    sampling_rate, data = wavfile.read( self.normalized_music_file )
+    # TODO: getting the first channel. should be single channel from the start.
     # get audio track data (mono)
-    a = data.T
-    # get length of amount of samples
-    aLength = len(a)
+    a = data.T[0]
+    # get the amount of samples
+    a_length = len(a)
 
-    print 'audio track data'
-    print a
+    print a_length
+
+    # setting up chunking process
+    fragment_size = int(sampling_rate * self.audio_fragment_size)
+    fragment_count = int(2 * math.floor(a_length / fragment_size) - 1)
+    fragments    = []
+
+    # TODO: debug
+    print 'processing'
+    print 'fragment_count: '
+    print fragment_count
+    print 'fragment_size: '
+    print fragment_size
+
+    i = 0
+    # build each fragment up
+    while (i < fragment_count):
+      current_fragment = []
+      
+      j = i * fragment_size
+      # get each individual sample for the fragment
+      while ( j < (i + 1) * fragment_size):
+        # normalize sample on [-1, 1)
+        normalized_sample = (a[j] / 256)*2-1
+        # add to current_fragment array
+        current_fragment.append(normalized_sample)
+        # increment j
+        j += 1
+
+      # process current fragment through the FFT.
+      processed_fragment = fft(current_fragment)
+      # TODO: PROCESS SOME MO for visualization.
+      fragments.append(processed_fragment)
+
+      i += 1
+
+    # TODO: debug
+    print fragments
+    
 
 
   # -------------------------------------------------------------------------- #
