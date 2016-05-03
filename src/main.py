@@ -10,14 +10,16 @@ class VisualizerCore:
   # directory of temporary audio files
   tmpDir = './tmp/'
 
-  music_file = ''
+  original_music_file = ''
+  processsed_music_file = ''
   sample_rate = 44100
 
   def __init__(self, music_file):
-    self.music_file = music_file
+    self.original_music_file = music_file
     music = AudioSegment.from_mp3(music_file)
     self.createTmpDirectories()
-    music.export('./tmp/', format='wav')
+    self.processsed_music_file = './tmp/sleep_deprivation'
+    music.export(self.processsed_music_file, format='wav')
 
   # -------------------------------------------------------------------------- #
   # Conversion #
