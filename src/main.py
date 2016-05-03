@@ -1,8 +1,12 @@
-from pydub import AudioSegment
+# for temp directory stuff.
 from shutil import rmtree
 from os import makedirs
 from os import chmod
 import os.path
+
+# for audio processing
+from pydub import AudioSegment
+import scipy.io.wavfile as wavfile
 
 
 class VisualizerCore:
@@ -17,18 +21,26 @@ class VisualizerCore:
   def __init__(self, music_file):
     self.original_music_file = music_file
     # normalize audio to a canonical format.
-    normalize_audio()
+    self.normalize_audio()
     # process normalized audio by fft'ing, chunking, etc.
-    process_audio()
+    self.process_audio()
 
   def normalize_audio(self):
-    music = AudioSegment.from_mp3(self.music_file)
+    music = AudioSegment.from_mp3(self.original_music_file)
     self.createTmpDirectories()
     self.normalized_music_file = './tmp/sleep_deprivation'
     music.export(self.normalized_music_file, format='wav')
 
   def process_audio(self):
-    pass
+    # read the file
+    samplingRate, data = wavfile.read( self.normalized_music_file )
+    # get audio track data (mono)
+    a = data.T
+    # get length of amount of samples
+    aLength = len(a)
+
+    print 'audio track data'
+    print a
 
 
   # -------------------------------------------------------------------------- #
