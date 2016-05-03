@@ -21,12 +21,17 @@ class VisualizerCore:
   
   audio_fragment_size = 0.125
 
+  # the fourier-transformed, time-bucketed fragments.
+  fragments = []
+
   def __init__(self, music_file):
     self.original_music_file = music_file
     # normalize audio to a canonical format.
     self.normalize_audio()
     # process normalized audio by fft'ing, chunking, etc.
     self.process_audio()
+    # computer color values for the fragmented audio segments
+    self.colorize_audio()
 
   def normalize_audio(self):
     music = AudioSegment.from_mp3(self.original_music_file)
@@ -65,7 +70,7 @@ class VisualizerCore:
       
       j = i * fragment_size
       # get each individual sample for the fragment
-      while ( j < (i + 1) * fragment_size):
+      while ((j < (i + 1) * fragment_size) and j < a_length):
         # normalize sample on [-1, 1)
         normalized_sample = (a[j] / 256)*2-1
         # add to current_fragment array
@@ -82,7 +87,11 @@ class VisualizerCore:
 
     # TODO: debug
     print fragments
-    
+    self.fragments = fragments
+
+  def colorize_audio(self):
+    pass
+
 
 
   # -------------------------------------------------------------------------- #
