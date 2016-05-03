@@ -120,8 +120,11 @@ class VisualizerCore:
 
     b = 0
     while ( b < len(bin_values) ):
-      bin_values[b] = int(255 * (bin_values[b] / bin_max))
+      bin_values[b] = int(255 * (float(bin_values[b]) / float(bin_max)))
       b += 1
+
+    print 'normalized bin values:'
+    print bin_values
 
     VisualizerCore.build_and_send_color_object(bin_values)
 
