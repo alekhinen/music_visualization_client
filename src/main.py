@@ -13,6 +13,13 @@ from scipy.fftpack import fft
 # for sending requests
 from api_requests import post_colors
 
+# for playing audio
+from pydub.playback import play
+import threading
+
+# and for limiting how quickly samples are processed
+import time
+
 class VisualizerCore:
 
   # directory of temporary audio files
@@ -21,7 +28,8 @@ class VisualizerCore:
   original_music_file = ''
   normalized_music_file = ''
   
-  audio_fragment_size = 0.125
+  audio_fragment_size = 0.05859375 # 1 second / (1024 bpm / 60 seconds)
+  music = ''
 
   # the fourier-transformed, time-bucketed fragments.
   fragments = []
@@ -31,16 +39,24 @@ class VisualizerCore:
     # normalize audio to a canonical format.
     self.normalize_audio()
     # process normalized audio by fft'ing, chunking, etc.
+    self.play_audio()
     self.process_audio()
     # computer color values for the fragmented audio segments
     # self.colorize_audio()
 
   def normalize_audio(self):
-    music = AudioSegment.from_mp3(self.original_music_file)
+    self.music = AudioSegment.from_mp3(self.original_music_file)
     self.createTmpDirectories()
     self.normalized_music_file = './tmp/sleep_deprivation'
     # TODO: need to ensure this is being normalized to a mono channel (update: it ain't).
-    music.export(self.normalized_music_file, format='wav', parameters=['ac', '1'])
+    self.music.export(self.normalized_music_file, format='wav', parameters=['ac', '1'])
+
+  def play_audio(self):
+    t = threading.Thread(target=play, args=(self.music,))
+    lock = threading.Lock()
+    lock.acquire()
+    t.start()
+    lock.release()
 
   def process_audio(self):
     # read the file
@@ -126,6 +142,10 @@ class VisualizerCore:
     print 'normalized bin values:'
     print bin_values
 
+    # keep in sync with the sampling rate.
+    # TODO: this doesn't seem to be doing what i thought it would..
+    # time.sleep(self.audio_fragment_size)
+    
     VisualizerCore.build_and_send_color_object(bin_values)
 
   @staticmethod
