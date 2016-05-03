@@ -11,15 +11,25 @@ class VisualizerCore:
   tmpDir = './tmp/'
 
   original_music_file = ''
-  processsed_music_file = ''
+  normalized_music_file = ''
   sample_rate = 44100
 
   def __init__(self, music_file):
     self.original_music_file = music_file
-    music = AudioSegment.from_mp3(music_file)
+    # normalize audio to a canonical format.
+    normalize_audio()
+    # process normalized audio by fft'ing, chunking, etc.
+    process_audio()
+
+  def normalize_audio(self):
+    music = AudioSegment.from_mp3(self.music_file)
     self.createTmpDirectories()
-    self.processsed_music_file = './tmp/sleep_deprivation'
-    music.export(self.processsed_music_file, format='wav')
+    self.normalized_music_file = './tmp/sleep_deprivation'
+    music.export(self.normalized_music_file, format='wav')
+
+  def process_audio(self):
+    pass
+
 
   # -------------------------------------------------------------------------- #
   # Conversion #
