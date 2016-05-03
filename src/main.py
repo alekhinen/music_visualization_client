@@ -115,13 +115,13 @@ class VisualizerCore:
         bin_max_position = b
       b += 1
 
+    print 'bin values:'
+    print bin_values
+
     b = 0
     while ( b < len(bin_values) ):
       bin_values[b] = int(255 * (bin_values[b] / bin_max))
       b += 1
-
-    print 'bin values:'
-    print bin_values
 
     VisualizerCore.build_and_send_color_object(bin_values)
 
@@ -131,7 +131,7 @@ class VisualizerCore:
     i = 0
     for b in color_bins:
       key_name = 'color_' + str(i)
-      color_object[key_name] = [b, 0, 0]
+      color_object[key_name] = '[' + str(b) + ', 0, 0]'
       i += 1
     print color_object
     post_colors(color_object)
