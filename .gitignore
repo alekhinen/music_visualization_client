@@ -47,3 +47,7 @@ ee http://help.github.com/ignore-files/ for more about ignoring files.
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Specific Files #
+##################
+/src/settings.py
